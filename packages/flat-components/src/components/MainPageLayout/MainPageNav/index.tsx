@@ -1,10 +1,11 @@
 import "./style.less";
+
 import React from "react";
 import classNames from "classnames";
 import { MainPageLayoutItem } from "../types";
-import { MainPageNavAvatar, MainPageNavAvatarProps } from "../MainPageNavAvatar";
+import { SVGLogo } from "../../FlatIcons";
 
-export interface MainPageNavProps extends MainPageNavAvatarProps {
+export interface MainPageNavProps {
     /** when an item is clicked */
     onClick: (mainPageLayoutItem: MainPageLayoutItem) => void;
     /** a list of keys to highlight the items */
@@ -13,37 +14,30 @@ export interface MainPageNavProps extends MainPageNavAvatarProps {
     sideMenu: MainPageLayoutItem[];
     /** outside footer menu in MainPageLayout */
     sideMenuFooter: MainPageLayoutItem[];
+    /** add extra padding top to the logo */
+    isMac?: boolean;
 }
 
 export const MainPageNav: React.FC<MainPageNavProps> = ({
-    avatarSrc,
-    userName,
     onClick,
     activeKeys,
     sideMenu,
     sideMenuFooter,
-    popMenu,
+    isMac,
 }) => {
     return (
         <div className="main-page-nav-container">
-            <div className="main-page-nav-header">
-                <MainPageNavAvatar
-                    avatarSrc={avatarSrc}
-                    userName={userName}
-                    onClick={onClick}
-                    activeKeys={activeKeys}
-                    popMenu={popMenu}
-                />
-            </div>
             <div className="main-page-nav-content">
+                <SVGLogo className={classNames("main-page-nav-logo", { isMac })} />
                 {sideMenu.map(menuItem => {
                     return (
                         <a
                             key={menuItem.key}
-                            className={classNames({
+                            className={classNames("main-page-nav-btn", {
                                 "is-active": activeKeys.includes(menuItem.key),
                             })}
                             href={menuItem.route}
+                            title={menuItem.htmlTitle}
                             onClick={e => {
                                 e.preventDefault();
                                 onClick(menuItem);
@@ -59,10 +53,11 @@ export const MainPageNav: React.FC<MainPageNavProps> = ({
                     return (
                         <a
                             key={menuItem.key}
-                            className={classNames({
+                            className={classNames("main-page-nav-btn", {
                                 "is-active": activeKeys.includes(menuItem.key),
                             })}
                             href={menuItem.route}
+                            title={menuItem.htmlTitle}
                             onClick={e => {
                                 e.preventDefault();
                                 onClick(menuItem);

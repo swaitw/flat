@@ -1,18 +1,21 @@
 import "./style.less";
+import chatMessagesDefaultSVG from "./icons/chat-messages-default.svg";
+import chatMessagesDefaultDarkSVG from "./icons/chat-messages-default-dark.svg";
 
-import React from "react";
+import React, { useContext } from "react";
 import { observer } from "mobx-react-lite";
 import { ChatTypeBox, ChatTypeBoxProps } from "../ChatTypeBox";
 import { ChatMessageList, ChatMessageListProps } from "../ChatMessageList";
-import { useTranslation } from "react-i18next";
+import { DarkModeContext } from "../../FlatThemeProvider";
 
 export type ChatMessagesProps = ChatTypeBoxProps & ChatMessageListProps;
 
-export const ChatMessages = observer<ChatMessagesProps>(function ChatMessages({
+export const ChatMessages = /* @__PURE__ */ observer<ChatMessagesProps>(function ChatMessages({
     messages,
     ...restProps
 }) {
-    const { t } = useTranslation();
+    const isDark = useContext(DarkModeContext);
+
     return (
         <div className="chat-messages-wrap">
             <div className="chat-messages">
@@ -21,7 +24,9 @@ export const ChatMessages = observer<ChatMessagesProps>(function ChatMessages({
                         <ChatMessageList messages={messages} {...restProps} />
                     </div>
                 ) : (
-                    <div className="chat-messages-default">{t("say-something")}</div>
+                    <div className="chat-messages-default">
+                        <img src={isDark ? chatMessagesDefaultDarkSVG : chatMessagesDefaultSVG} />
+                    </div>
                 )}
             </div>
             <ChatTypeBox {...restProps} />

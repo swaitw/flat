@@ -1,7 +1,7 @@
 import React from "react";
 import { Select } from "antd";
 import { observer } from "mobx-react-lite";
-import { Device } from "../types/Device";
+import { Device } from "../types/device";
 
 export interface DeviceSelectProps {
     devices: Device[];
@@ -20,10 +20,10 @@ export const DeviceSelect = observer<DeviceSelectProps>(function DeviceSelect({
 
     return (
         <Select value={currentDeviceID} onChange={onChange}>
-            {devices.map(({ deviceid, devicename }) => {
+            {devices.map(({ deviceId, label }) => {
                 return (
-                    <Select.Option value={deviceid} key={deviceid}>
-                        {devicename}
+                    <Select.Option key={deviceId} value={deviceId}>
+                        {label}
                     </Select.Option>
                 );
             })}

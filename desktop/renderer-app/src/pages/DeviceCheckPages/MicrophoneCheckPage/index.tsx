@@ -2,17 +2,18 @@ import infoSVG from "../../../assets/image/info.svg";
 import successSVG from "../../../assets/image/success.svg";
 import "./index.less";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Button, Modal } from "antd";
 import { observer } from "mobx-react-lite";
 import { DeviceSelect } from "../../../components/DeviceSelect";
-import { Device } from "../../../types/Device";
-import { useRTCEngine } from "../../../utils/hooks/useRTCEngine";
+import { Device } from "../../../types/device";
 import { DeviceCheckLayoutContainer } from "../DeviceCheckLayoutContainer";
 import { useHistory, useLocation } from "react-router-dom";
 import { DeviceCheckResults, DeviceCheckState } from "../utils";
 import { routeConfig } from "../../../route-config";
-import { useTranslation } from "react-i18next";
+import { useTranslate } from "@netless/flat-i18n";
+import { useSafePromise } from "flat-components";
+import { withFlatServices } from "@netless/flat-pages/src/components/FlatServicesContext";
 
 interface SpeakerVolumeProps {
     percent: number;
@@ -27,9 +28,10 @@ const SpeakerVolume = observer<SpeakerVolumeProps>(function SpeakerVolume({ perc
     );
 });
 
-export const MicrophoneCheckPage = (): React.ReactElement => {
-    const { t } = useTranslation();
-    const rtcEngine = useRTCEngine();
+export const MicrophoneCheckPage = withFlatServices("videoChat")(({
+    videoChat: rtc,
+}): React.ReactElement => {
+    const t = useTranslate();
     const [devices, setDevices] = useState<Device[]>([]);
     const [currentDeviceID, setCurrentDeviceID] = useState<string | null>(null);
     const [currentVolume, setCurrentVolume] = useState(0);
@@ -37,6 +39,7 @@ export const MicrophoneCheckPage = (): React.ReactElement => {
     const [micCheckState, setMicCheckState] = useState<DeviceCheckState>();
     const location = useLocation<DeviceCheckResults | undefined>();
     const history = useHistory<DeviceCheckResults>();
+    const sp = useSafePromise();
 
     const { systemCheck, cameraCheck, speakerCheck } = location.state || {};
 
@@ -47,57 +50,47 @@ export const MicrophoneCheckPage = (): React.ReactElement => {
         speakerCheck?.hasError === false &&
         micCheckState?.hasError === false;
 
-    useEffect(() => {
-        setDevices(rtcEngine.getAudioRecordingDevices() as Device[]);
-
-        const onAudioDeviceStateChanged = (): void => {
-            setDevices(rtcEngine.getVideoDevices() as Device[]);
-        };
-
-        rtcEngine.on("audioDeviceStateChanged", onAudioDeviceStateChanged);
-
-        return () => {
-            rtcEngine.off("audioDeviceStateChanged", onAudioDeviceStateChanged);
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [rtcEngine]);
+    const onMicChanged = useCallback(
+        (deviceID: string): void => {
+            rtc.setMicID(deviceID);
+        },
+        [rtc],
+    );
 
     useEffect(() => {
-        if (devices.length !== 0) {
-            setCurrentDeviceID(devices[0].deviceid);
-        }
-    }, [devices]);
+        const updateMicDevices = async (deviceID?: string): Promise<void> => {
+            const devices = await sp(rtc.getMicDevices());
+            setDevices(devices);
+            setCurrentDeviceID(deviceID || devices[0]?.deviceId || null);
+        };
+        updateMicDevices();
+        return rtc.events.on("mic-changed", updateMicDevices);
+    }, [rtc, sp]);
 
     useEffect(() => {
-        const groupAudioVolumeIndication = (
-            _speakers: any,
-            _speakerNumber: any,
-            totalVolume: number,
-        ): void => {
-            // totalVolume value max 255
-            setCurrentVolume(Math.ceil((totalVolume / 255) * 100));
-        };
+        return rtc.events.on("volume-level-changed", volume => {
+            setCurrentVolume(volume * 100);
+        });
+    }, [currentDeviceID, rtc]);
 
+    useEffect(() => {
         if (currentDeviceID) {
-            rtcEngine.setAudioRecordingDevice(currentDeviceID);
-            rtcEngine.on("groupAudioVolumeIndication", groupAudioVolumeIndication);
-            rtcEngine.startAudioRecordingDeviceTest(300);
+            rtc.startMicTest();
+            return () => {
+                rtc.stopMicTest();
+            };
         }
-
-        return () => {
-            rtcEngine.removeListener("groupAudioVolumeIndication", groupAudioVolumeIndication);
-            rtcEngine.stopAudioRecordingDeviceTest();
-        };
-    }, [currentDeviceID, rtcEngine]);
+        return;
+    }, [currentDeviceID, rtc]);
 
     return (
         <DeviceCheckLayoutContainer>
             <div className="speaker-check-container">
                 <p>{t("microphone")}</p>
                 <DeviceSelect
-                    devices={devices}
                     currentDeviceID={currentDeviceID}
-                    onChange={setCurrentDeviceID}
+                    devices={devices}
+                    onChange={onMicChanged}
                 />
                 <p>{t("audition-sound")}</p>
                 <SpeakerVolume percent={currentVolume} />
@@ -121,14 +114,14 @@ export const MicrophoneCheckPage = (): React.ReactElement => {
                     </Button>
                 </div>
                 <Modal
-                    width={368}
-                    className="check-result-modal"
-                    visible={resultModalVisible}
                     destroyOnClose
-                    title={renderTitle()}
+                    className="check-result-modal"
                     footer={renderFooter()}
-                    onOk={() => showResultModal(false)}
+                    title={renderTitle()}
+                    visible={resultModalVisible}
+                    width={368}
                     onCancel={() => showResultModal(false)}
+                    onOk={() => showResultModal(false)}
                 >
                     <div className="table">
                         <div className="left">{t("system-testing")}</div>{" "}
@@ -157,14 +150,14 @@ export const MicrophoneCheckPage = (): React.ReactElement => {
         if (isSuccess) {
             return (
                 <div className="device-check-modal-title">
-                    <img src={successSVG} alt="success" />
+                    <img alt="success" src={successSVG} />
                     {t("device-condition-is-normal")}
                 </div>
             );
         } else {
             return (
                 <div className="device-check-modal-title">
-                    <img src={infoSVG} alt="info" />
+                    <img alt="info" src={infoSVG} />
                     {t("device-condition-is-abnormal")}
                 </div>
             );
@@ -172,20 +165,20 @@ export const MicrophoneCheckPage = (): React.ReactElement => {
     }
 
     function renderFooter(): React.ReactNode {
-        if (!isSuccess) {
+        if (isSuccess) {
             return (
-                <Button type="primary" onClick={resetCheck} className="device-check-modal-btn">
-                    {t("test-again")}
+                <Button
+                    className="device-check-modal-btn"
+                    type="primary"
+                    onClick={() => showResultModal(false)}
+                >
+                    {t("ok")}
                 </Button>
             );
         } else {
             return (
-                <Button
-                    type="primary"
-                    onClick={() => showResultModal(false)}
-                    className="device-check-modal-btn"
-                >
-                    {t("ok")}
+                <Button className="device-check-modal-btn" type="primary" onClick={resetCheck}>
+                    {t("test-again")}
                 </Button>
             );
         }
@@ -215,4 +208,4 @@ export const MicrophoneCheckPage = (): React.ReactElement => {
         }
         return <span className="green">{t("normal")}</span>;
     }
-};
+});

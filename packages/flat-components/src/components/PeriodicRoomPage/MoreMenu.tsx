@@ -5,13 +5,14 @@ import { Dropdown, Menu, message } from "antd";
 import { RoomInfo } from "../../types/room";
 import { InviteModal } from "../InviteModal";
 import { CancelSubPeriodicRoomModal } from "./CancelSubPeriodicRoomModal";
-import { useTranslation } from "react-i18next";
+import { useTranslate } from "@netless/flat-i18n";
 
 export interface MoreMenuProps {
     room: RoomInfo;
     userName: string;
     inviteBaseUrl: string;
     isCreator: boolean;
+    isPmi?: boolean;
     onCopyInvitation: (text: string) => void;
     onCancelSubPeriodicRoom: () => void;
     jumpToRoomDetailPage: () => void;
@@ -23,58 +24,76 @@ export const MoreMenu: React.FC<MoreMenuProps> = ({
     userName,
     inviteBaseUrl,
     isCreator,
+    isPmi,
     onCopyInvitation,
     onCancelSubPeriodicRoom,
     jumpToRoomDetailPage,
     jumpToModifyOrdinaryRoomPage,
 }) => {
-    const { t } = useTranslation();
+    const t = useTranslate();
     const [cancelSubPeriodicRoomVisible, setCancelSubPeriodicRoomVisible] = useState(false);
     const [inviteRoomVisible, setInviteRoomVisible] = useState(false);
 
     return (
-        <Dropdown
-            overlay={() => {
-                return (
-                    <Menu>
-                        <Menu.Item onClick={jumpToRoomDetailPage}>{t("room-detail")}</Menu.Item>
-                        {isCreator && (
-                            <>
-                                <Menu.Item onClick={jumpToModifyOrdinaryRoomPage}>
-                                    {t("modify-room")}
-                                </Menu.Item>
-                                <Menu.Item onClick={() => setCancelSubPeriodicRoomVisible(true)}>
-                                    {t("cancel-room")}
-                                </Menu.Item>
-                            </>
-                        )}
-                        <Menu.Item onClick={() => setInviteRoomVisible(true)}>
-                            {t("copy-invitation")}
-                        </Menu.Item>
-                        <CancelSubPeriodicRoomModal
-                            visible={cancelSubPeriodicRoomVisible}
-                            isCreator={isCreator}
-                            onCancel={() => setCancelSubPeriodicRoomVisible(false)}
-                            onCancelSubPeriodicRoom={onCancelSubPeriodicRoom}
+        <>
+            <Dropdown
+                overlay={() => {
+                    return (
+                        <Menu
+                            items={[
+                                {
+                                    key: "room-detail",
+                                    label: t("room-detail"),
+                                    onClick: jumpToRoomDetailPage,
+                                },
+                                ...(isCreator
+                                    ? [
+                                          {
+                                              key: "modify-room",
+                                              label: t("modify-room"),
+                                              onClick: jumpToModifyOrdinaryRoomPage,
+                                          },
+                                          {
+                                              key: "cancel-room",
+                                              label: t("cancel-room"),
+                                              onClick: () => setCancelSubPeriodicRoomVisible(true),
+                                          },
+                                      ]
+                                    : []),
+                                {
+                                    key: "invitation",
+                                    label: t("invitation"),
+                                    onClick: () => setInviteRoomVisible(true),
+                                },
+                            ]}
                         />
-                        <InviteModal
-                            visible={inviteRoomVisible}
-                            room={room}
-                            baseUrl={inviteBaseUrl}
-                            userName={userName}
-                            onCopy={text => {
-                                onCopyInvitation(text);
-                                void message.success(t("copy-success"));
-                                setInviteRoomVisible(false);
-                            }}
-                            onCancel={() => setInviteRoomVisible(false)}
-                        />
-                    </Menu>
-                );
-            }}
-            trigger={["click"]}
-        >
-            <img src={moreMenuSVG} alt={t("more")} />
-        </Dropdown>
+                    );
+                }}
+                trigger={["click"]}
+            >
+                <button className="periodic-room-panel-more-btn">
+                    <img alt={t("more")} src={moreMenuSVG} />
+                </button>
+            </Dropdown>
+            <CancelSubPeriodicRoomModal
+                isCreator={isCreator}
+                visible={cancelSubPeriodicRoomVisible}
+                onCancel={() => setCancelSubPeriodicRoomVisible(false)}
+                onCancelSubPeriodicRoom={onCancelSubPeriodicRoom}
+            />
+            <InviteModal
+                baseUrl={inviteBaseUrl}
+                isPmi={isPmi}
+                room={room}
+                userName={userName}
+                visible={inviteRoomVisible}
+                onCancel={() => setInviteRoomVisible(false)}
+                onCopy={text => {
+                    onCopyInvitation(text);
+                    void message.success(t("copy-success"));
+                    setInviteRoomVisible(false);
+                }}
+            />
+        </>
     );
 };

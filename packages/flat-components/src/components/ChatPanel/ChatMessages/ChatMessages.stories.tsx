@@ -4,7 +4,6 @@ import faker from "faker";
 import React from "react";
 import { ChatMessages, ChatMessagesProps } from ".";
 import { User } from "../../../types/user";
-import { ChatMsgType } from "../types";
 
 const chance = new Chance();
 
@@ -21,10 +20,11 @@ export const Overview: Story<ChatMessagesProps> = args => (
     </div>
 );
 const makeUser = (): User => ({
-    userUUID: faker.random.uuid(),
+    userUUID: faker.datatype.uuid(),
     name: faker.name.lastName(),
-    isSpeak: faker.random.boolean(),
-    isRaiseHand: faker.random.boolean(),
+    isSpeak: faker.datatype.boolean(),
+    wbOperate: faker.datatype.boolean(),
+    isRaiseHand: faker.datatype.boolean(),
     avatar: "http://placekitten.com/64/64",
 });
 const currentUser = makeUser();
@@ -39,11 +39,12 @@ Overview.args = {
     messages: Array(20)
         .fill(0)
         .map(() => ({
+            type: "room-message",
+            roomUUID: faker.datatype.uuid(),
+            uuid: faker.datatype.uuid(),
             timestamp: +faker.date.past(),
-            type: ChatMsgType.ChannelMessage,
-            userUUID: chance.pickone(users).userUUID,
-            uuid: faker.random.uuid(),
-            value: chance.sentence({ words: faker.random.number(20) }),
+            text: chance.sentence({ words: faker.datatype.number(20) }),
+            senderID: faker.datatype.uuid(),
         })),
     getUserByUUID: uuid => users.find(e => e.userUUID === uuid) || makeUser(),
 };

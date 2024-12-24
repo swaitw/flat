@@ -3,7 +3,7 @@ import "./style.less";
 import React, { useState } from "react";
 import { observer } from "mobx-react-lite";
 import { User } from "../../../types/user";
-import { useTranslation } from "react-i18next";
+import { useTranslate } from "@netless/flat-i18n";
 
 export interface ChatUserProps {
     /** room owner uuid */
@@ -12,6 +12,7 @@ export interface ChatUserProps {
     userUUID: string;
     /** a user */
     user: User;
+    disableEndSpeaking?: boolean;
     /** when hand raising is accepted by the teacher */
     onAcceptRaiseHand: (uid: string) => void;
     /** user stops speaking */
@@ -20,15 +21,16 @@ export interface ChatUserProps {
     generateAvatar: (uid: string) => string;
 }
 
-export const ChatUser = observer<ChatUserProps>(function ChatUser({
+export const ChatUser = /* @__PURE__ */ observer<ChatUserProps>(function ChatUser({
     ownerUUID,
     userUUID,
     user,
+    disableEndSpeaking,
     onAcceptRaiseHand,
     onEndSpeaking,
     generateAvatar,
 }) {
-    const { t } = useTranslation();
+    const t = useTranslate();
     const [isAvatarLoadFailed, setAvatarLoadFailed] = useState(false);
     /** is current user the room owner */
     const isCreator = ownerUUID === userUUID;
@@ -38,20 +40,32 @@ export const ChatUser = observer<ChatUserProps>(function ChatUser({
     return (
         <div className="chat-user">
             <img
+                alt={`User ${user.name}`}
                 className="chat-user-avatar"
                 src={isAvatarLoadFailed ? generateAvatar(userUUID) : user.avatar}
                 onError={() => setAvatarLoadFailed(true)}
-                alt={`User ${user.name}`}
             />
             <span className="chat-user-name">{user.name}</span>
             {ownerUUID === user.userUUID ? (
-                <span className="chat-user-status is-teacher">{t("teacher")}</span>
+                <span className="chat-user-status is-teacher">({t("teacher")})</span>
+            ) : user.hasLeft ? (
+                <>
+                    <span className="chat-user-status has-left">{t("has-left")}</span>
+                    {(isCreator || isCurrentUser) && !disableEndSpeaking && (
+                        <button
+                            className="chat-user-ctl-btn is-speaking"
+                            onClick={() => onEndSpeaking(user.userUUID)}
+                        >
+                            {t("end")}
+                        </button>
+                    )}
+                </>
             ) : user.isSpeak ? (
                 <>
                     <span className="chat-user-status is-speaking">
                         {t("during-the-presentation")}
                     </span>
-                    {(isCreator || isCurrentUser) && (
+                    {(isCreator || isCurrentUser) && !disableEndSpeaking && (
                         <button
                             className="chat-user-ctl-btn is-speaking"
                             onClick={() => onEndSpeaking(user.userUUID)}

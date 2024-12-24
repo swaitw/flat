@@ -1,38 +1,33 @@
 import "./style.less";
 
-import React, { useState } from "react";
-import { Tabs } from "antd";
+import React from "react";
 import { observer } from "mobx-react-lite";
+import { useTranslate } from "@netless/flat-i18n";
 import { ChatMessages, ChatMessagesProps } from "./ChatMessages";
 import { ChatTabTitle, ChatTabTitleProps } from "./ChatTabTitle";
-import { ChatUsers, ChatUsersProps } from "./ChatUsers";
-import { useTranslation } from "react-i18next";
 
-export type ChatPanelProps = ChatTabTitleProps &
-    Omit<ChatMessagesProps, "visible"> &
-    ChatUsersProps;
+export type ChatPanelProps = {
+    totalUserCount?: number;
+    onClickTotalUsersCount?: () => void;
+} & ChatTabTitleProps &
+    Omit<ChatMessagesProps, "visible">;
 
-export const ChatPanel = observer<ChatPanelProps>(function ChatPanel(props) {
-    const { t } = useTranslation();
-    const [activeTab, setActiveTab] = useState<"messages" | "users">("messages");
+export const ChatPanel = /* @__PURE__ */ observer<ChatPanelProps>(function ChatPanel(props) {
+    const t = useTranslate();
 
     return (
         <div className="chat-panel">
-            <Tabs
-                activeKey={activeTab}
-                onChange={setActiveTab as (key: string) => void}
-                tabBarGutter={0}
-            >
-                <Tabs.TabPane tab={<ChatTabTitle>{t("messages")}</ChatTabTitle>} key="messages">
-                    <ChatMessages {...props} visible={activeTab === "messages"} />
-                </Tabs.TabPane>
-                <Tabs.TabPane
-                    tab={<ChatTabTitle {...props}>{t("users")}</ChatTabTitle>}
-                    key="users"
-                >
-                    <ChatUsers {...props} />
-                </Tabs.TabPane>
-            </Tabs>
+            <div className="chat-panel-header">
+                <ChatTabTitle>
+                    <span>{t("messages")}</span>
+                </ChatTabTitle>
+                {props.totalUserCount && (
+                    <span className="chat-tab-subtitle" onClick={props.onClickTotalUsersCount}>
+                        {t("total-users-count", { count: props.totalUserCount })}
+                    </span>
+                )}
+            </div>
+            <ChatMessages {...props} visible />
         </div>
     );
 });

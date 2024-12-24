@@ -6,7 +6,7 @@ import { observer } from "mobx-react-lite";
 import { RoomInfo, RoomStatus, Week } from "../../../types/room";
 import { InviteModal } from "../../InviteModal";
 import { RemoveRoomModal } from "../../RemoveRoomModal";
-import { useTranslation } from "react-i18next";
+import { useTranslate } from "@netless/flat-i18n";
 
 export interface RoomDetailFooterProps {
     room: RoomInfo;
@@ -16,6 +16,7 @@ export interface RoomDetailFooterProps {
     inviteBaseUrl: string;
     // repeated weeks for periodic rooms
     periodicWeeks?: Week[];
+    isPmi?: boolean;
     onJoinRoom: () => void;
     onReplayRoom: () => void;
     onModifyRoom: () => void;
@@ -23,88 +24,95 @@ export interface RoomDetailFooterProps {
     onCopyInvitation: (text: string) => void;
 }
 
-export const RoomDetailFooter = observer<RoomDetailFooterProps>(function RoomDetailFooter({
-    room,
-    userName,
-    inviteBaseUrl,
-    isCreator,
-    isPeriodicDetailsPage,
-    periodicWeeks,
-    onJoinRoom,
-    onReplayRoom,
-    onModifyRoom,
-    onCancelRoom,
-    onCopyInvitation,
-}) {
-    const { t } = useTranslation();
-    const [cancelModalVisible, setCancelModalVisible] = useState(false);
-    const [isShowInviteModal, setIsShowInviteModal] = useState(false);
-    const hideInviteModal = (): void => setIsShowInviteModal(false);
+export const RoomDetailFooter = /* @__PURE__ */ observer<RoomDetailFooterProps>(
+    function RoomDetailFooter({
+        room,
+        userName,
+        inviteBaseUrl,
+        isCreator,
+        isPeriodicDetailsPage,
+        periodicWeeks,
+        isPmi,
+        onJoinRoom,
+        onReplayRoom,
+        onModifyRoom,
+        onCancelRoom,
+        onCopyInvitation,
+    }) {
+        const t = useTranslate();
+        const [cancelModalVisible, setCancelModalVisible] = useState(false);
+        const [isShowInviteModal, setIsShowInviteModal] = useState(false);
+        const hideInviteModal = (): void => setIsShowInviteModal(false);
 
-    if (room.roomStatus === RoomStatus.Stopped) {
+        if (room.roomStatus === RoomStatus.Stopped) {
+            return (
+                <div className="room-detail-footer-btn-container">
+                    <Button
+                        className="room-detail-footer-btn"
+                        disabled={!room.hasRecord}
+                        onClick={onReplayRoom}
+                    >
+                        {t("view-replay")}
+                    </Button>
+                </div>
+            );
+        }
+
+        const disabled = !isCreator || room.roomStatus === RoomStatus.Idle;
+        const title = isCreator ? t("cancel-room") : t("remove-room");
+
         return (
             <div className="room-detail-footer-btn-container">
                 <Button
+                    danger
                     className="room-detail-footer-btn"
-                    onClick={onReplayRoom}
-                    disabled={!room.hasRecord}
+                    disabled={!disabled}
+                    onClick={() => setCancelModalVisible(true)}
                 >
-                    {t("view-replay")}
+                    {title}
                 </Button>
-            </div>
-        );
-    }
-
-    const disabled = !isCreator || room.roomStatus === RoomStatus.Idle;
-    const title = isCreator ? t("cancel-room") : t("remove-room");
-
-    return (
-        <div className="room-detail-footer-btn-container">
-            <Button
-                className="room-detail-footer-btn"
-                danger
-                onClick={() => setCancelModalVisible(true)}
-                disabled={!disabled}
-            >
-                {title}
-            </Button>
-            {isCreator && (
+                {isCreator && (
+                    <Button
+                        className="room-detail-footer-btn"
+                        disabled={!disabled}
+                        onClick={onModifyRoom}
+                    >
+                        {t("modify-room")}
+                    </Button>
+                )}
                 <Button
                     className="room-detail-footer-btn"
-                    onClick={onModifyRoom}
-                    disabled={!disabled}
+                    onClick={() => setIsShowInviteModal(true)}
                 >
-                    {t("modify-room")}
+                    {t("invitation")}
                 </Button>
-            )}
-            <Button className="room-detail-footer-btn" onClick={() => setIsShowInviteModal(true)}>
-                {t("copy-invitation")}
-            </Button>
-            <Button className="room-detail-footer-btn" type="primary" onClick={onJoinRoom}>
-                {t("join-room")}
-            </Button>
-            <InviteModal
-                visible={isShowInviteModal}
-                room={room}
-                baseUrl={inviteBaseUrl}
-                periodicWeeks={periodicWeeks}
-                userName={userName}
-                onCopy={text => {
-                    onCopyInvitation(text);
-                    void message.success(t("copy-success"));
-                    hideInviteModal();
-                }}
-                onCancel={hideInviteModal}
-            />
-            <RemoveRoomModal
-                cancelModalVisible={cancelModalVisible}
-                onCancel={() => setCancelModalVisible(false)}
-                isCreator={isCreator}
-                roomUUID={room?.roomUUID}
-                periodicUUID={room?.periodicUUID}
-                isPeriodicDetailsPage={isPeriodicDetailsPage}
-                onCancelRoom={onCancelRoom}
-            />
-        </div>
-    );
-});
+                <Button className="room-detail-footer-btn" type="primary" onClick={onJoinRoom}>
+                    {t("join-room")}
+                </Button>
+                <InviteModal
+                    baseUrl={inviteBaseUrl}
+                    isPmi={isPmi}
+                    periodicWeeks={periodicWeeks}
+                    room={room}
+                    userName={userName}
+                    visible={isShowInviteModal}
+                    onCancel={hideInviteModal}
+                    onCopy={text => {
+                        onCopyInvitation(text);
+                        void message.success(t("copy-success"));
+                        hideInviteModal();
+                    }}
+                />
+                <RemoveRoomModal
+                    cancelModalVisible={cancelModalVisible}
+                    isCreator={isCreator}
+                    isPeriodicDetailsPage={isPeriodicDetailsPage}
+                    periodicUUID={room?.periodicUUID}
+                    roomUUID={room?.roomUUID}
+                    onCancel={() => setCancelModalVisible(false)}
+                    onCancelRoom={onCancelRoom}
+                />
+            </div>
+        );
+    },
+);

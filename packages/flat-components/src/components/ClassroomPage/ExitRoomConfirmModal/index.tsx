@@ -1,6 +1,6 @@
 import React, { FC } from "react";
 import { Button, Modal } from "antd";
-import { useTranslation } from "react-i18next";
+import { useTranslate } from "@netless/flat-i18n";
 
 export interface StopClassConfirmModalProps {
     visible: boolean;
@@ -19,14 +19,14 @@ export const StopClassConfirmModal: FC<StopClassConfirmModalProps> = ({
     onStop,
     onCancel,
 }) => {
-    const { t } = useTranslation();
+    const t = useTranslate();
     return (
         <Modal
-            visible={visible}
-            title={t("confirmation-of-the-end-of-classes")}
             okButtonProps={{ loading }}
-            onOk={onStop}
+            open={visible}
+            title={t("confirmation-of-the-end-of-classes")}
             onCancel={onCancel}
+            onOk={onStop}
         >
             <p>{t("end-of-class-tips")}</p>
         </Modal>
@@ -54,13 +54,9 @@ export const CloseRoomConfirmModal: FC<CloseRoomConfirmModalProps> = ({
     onStop,
     onCancel,
 }) => {
-    const { t } = useTranslation();
+    const t = useTranslate();
     return (
         <Modal
-            visible={visible}
-            title={t("close-option")}
-            onOk={onCancel}
-            onCancel={onCancel}
             footer={[
                 <Button key="Cancel" onClick={onCancel}>
                     {t("cancel")}
@@ -68,10 +64,14 @@ export const CloseRoomConfirmModal: FC<CloseRoomConfirmModalProps> = ({
                 <Button key="ReturnMain" loading={hangLoading} onClick={onHang}>
                     {t("hang-up-the-room")}
                 </Button>,
-                <Button key="StopClass" type="primary" loading={stopLoading} onClick={onStop}>
+                <Button key="StopClass" loading={stopLoading} type="primary" onClick={onStop}>
                     {t("end-the-class")}
                 </Button>,
             ]}
+            open={visible}
+            title={t("close-option")}
+            onCancel={onCancel}
+            onOk={onCancel}
         >
             <p>{t("exit-room-tips")}</p>
         </Modal>
@@ -93,13 +93,13 @@ export const ExitRoomConfirmModal: FC<ExitRoomConfirmModalProps> = ({
     onExit,
     onCancel,
 }) => {
-    const { t } = useTranslation();
+    const t = useTranslate();
     return (
         <Modal
-            visible={visible}
+            open={visible}
             title={t("student-sure-to-exit-the-room")}
-            onOk={onExit}
             onCancel={onCancel}
+            onOk={onExit}
         >
             <p>{t("student-exit-room-tip")}</p>
         </Modal>
