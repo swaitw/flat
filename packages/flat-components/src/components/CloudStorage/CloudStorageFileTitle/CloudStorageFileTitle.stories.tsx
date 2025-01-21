@@ -3,6 +3,7 @@ import { Story, Meta } from "@storybook/react";
 import faker from "faker";
 
 import { CloudStorageFileTitle, CloudStorageFileTitleProps } from "./index";
+import { FileConvertStep } from "@netless/flat-server-api";
 
 const storyMeta: Meta = {
     title: "CloudStorage/CloudStorageFileTitle",
@@ -15,7 +16,7 @@ export const Overview: Story<CloudStorageFileTitleProps> = args => (
     <CloudStorageFileTitle {...args} />
 );
 Overview.args = {
-    fileUUID: faker.random.uuid(),
+    fileUUID: faker.datatype.uuid(),
     fileName: faker.random.word() + "." + faker.system.commonFileExt(),
 };
 
@@ -23,41 +24,41 @@ export const Converting: Story<CloudStorageFileTitleProps> = args => (
     <CloudStorageFileTitle {...args} />
 );
 Converting.args = {
-    fileUUID: faker.random.uuid(),
+    fileUUID: faker.datatype.uuid(),
     fileName: faker.random.word() + ".pptx",
-    convertStatus: "converting",
+    convertStatus: FileConvertStep.Converting,
 };
 
 export const ConvertError: Story<CloudStorageFileTitleProps> = args => (
     <CloudStorageFileTitle {...args} />
 );
 ConvertError.args = {
-    fileUUID: faker.random.uuid(),
+    fileUUID: faker.datatype.uuid(),
     fileName: faker.random.word() + ".doc",
-    convertStatus: "error",
+    convertStatus: FileConvertStep.Failed,
 };
 
 export const Rename: Story<CloudStorageFileTitleProps> = args => (
     <CloudStorageFileTitle {...args} />
 );
 Rename.args = {
-    fileUUID: faker.random.uuid(),
+    fileUUID: faker.datatype.uuid(),
     fileName: faker.random.word() + ".doc",
-    convertStatus: "success",
+    convertStatus: FileConvertStep.Done,
 };
 Rename.args.renamingFileUUID = Rename.args.fileUUID;
 
 export const FileTitles: Story<CloudStorageFileTitleProps> = ({ onTitleClick }) => {
     const renderFileTitles = (fileType: string, exts: string[]): React.ReactElement => (
-        <div className="column is-one-quarter-tablet">
+        <div className="column">
             <div className="box">
                 <h1 className="title">{fileType}</h1>
                 {exts.map(ext => (
                     <div className="flex items-center ma2">
                         <CloudStorageFileTitle
                             key={ext}
-                            fileUUID={faker.random.uuid()}
                             fileName={faker.random.word() + ext}
+                            fileUUID={faker.datatype.uuid()}
                             onTitleClick={onTitleClick}
                         />
                     </div>

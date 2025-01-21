@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { MainPageLayoutItem } from "../types";
 
 export interface MainPageNavAvatarProps {
+    userUUID: string;
     /** user avatar src*/
     avatarSrc: string;
     /** user name */
@@ -15,16 +16,23 @@ export interface MainPageNavAvatarProps {
     activeKeys: string[];
     /** appear when click avatar component */
     popMenu: MainPageLayoutItem[];
+    /** function to generate placeholder avatar */
+    generateAvatar: (uid: string) => string;
 }
 
 export const MainPageNavAvatar: React.FC<MainPageNavAvatarProps> = ({
+    userUUID,
     avatarSrc,
     userName,
     onClick,
     activeKeys,
     popMenu,
+    generateAvatar,
 }) => {
     const [popMenuVisible, setPopMenuVisible] = useState(false);
+    const [isAvatarLoadFailed, setAvatarLoadFailed] = useState(false);
+
+    const avatar = isAvatarLoadFailed || !avatarSrc ? generateAvatar(userUUID) : avatarSrc;
 
     const togglePopMenuVisible = (): void => {
         setPopMenuVisible(!popMenuVisible);
@@ -32,15 +40,19 @@ export const MainPageNavAvatar: React.FC<MainPageNavAvatarProps> = ({
 
     return (
         <Popover
-            trigger="click"
-            placement="bottomRight"
-            overlayClassName="main-page-nav-popover"
-            title={renderPopMenuTitle}
-            visible={popMenuVisible}
-            onVisibleChange={togglePopMenuVisible}
             content={renderPopMenuInner}
+            open={popMenuVisible}
+            overlayClassName="main-page-nav-popover"
+            placement="bottomRight"
+            title={renderPopMenuTitle}
+            trigger="click"
+            onOpenChange={togglePopMenuVisible}
         >
-            <Avatar className="main-page-nav-avatar" size={32} icon={<img src={avatarSrc} />} />
+            <Avatar
+                className="main-page-nav-avatar"
+                icon={<img src={avatar} onError={() => avatar && setAvatarLoadFailed(true)} />}
+                size={24}
+            />
         </Popover>
     );
 
@@ -52,10 +64,11 @@ export const MainPageNavAvatar: React.FC<MainPageNavAvatarProps> = ({
                     return (
                         <a
                             key={menuItem.key}
-                            className="main-page-pop-menu-item "
+                            className="main-page-pop-menu-item"
                             onClick={e => {
                                 e.preventDefault();
                                 onClick(menuItem);
+                                togglePopMenuVisible();
                             }}
                         >
                             <span className="main-page-pop-menu-item-icon">

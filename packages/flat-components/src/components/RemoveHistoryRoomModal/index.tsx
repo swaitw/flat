@@ -3,7 +3,7 @@ import "./style.less";
 import React from "react";
 import { observer } from "mobx-react-lite";
 import { Button, Modal } from "antd";
-import { useTranslation } from "react-i18next";
+import { useTranslate } from "@netless/flat-i18n";
 
 export interface RemoveHistoryRoomModalProps {
     visible: boolean;
@@ -12,15 +12,12 @@ export interface RemoveHistoryRoomModalProps {
     loading: boolean;
 }
 
-export const RemoveHistoryRoomModal = observer<RemoveHistoryRoomModalProps>(
+export const RemoveHistoryRoomModal = /* @__PURE__ */ observer<RemoveHistoryRoomModalProps>(
     function RemoveHistoryRoomModal({ visible, onCancel, onConfirm, loading }) {
-        const { t } = useTranslation();
+        const t = useTranslate();
         return (
             <Modal
-                wrapClassName="remove-history-room-modal-container"
-                title={t("delete-room-records")}
-                visible={visible}
-                onCancel={onCancel}
+                destroyOnClose
                 footer={[
                     <Button key="exit-cancel" onClick={onCancel}>
                         {t("cancel")}
@@ -29,7 +26,10 @@ export const RemoveHistoryRoomModal = observer<RemoveHistoryRoomModalProps>(
                         {t("confirm")}
                     </Button>,
                 ]}
-                destroyOnClose
+                open={visible}
+                title={t("delete-room-records")}
+                wrapClassName="remove-history-room-modal-container"
+                onCancel={onCancel}
             >
                 {t("delete-room-records-tips")}
             </Modal>

@@ -9,6 +9,10 @@ import CloudStorageUploadItem from "../CloudStorageUploadItem";
 
 const chance = new Chance();
 
+/**
+ * TODO: we forget set i18n in current file!!!
+ */
+
 const storyMeta: Meta = {
     title: "CloudStorage/CloudStorageUploadPanel",
     component: CloudStorageUploadPanel,
@@ -21,7 +25,7 @@ export const Overview: Story<CloudStorageUploadPanelProps> = args => (
         {String(args.children)
             .split("\n")
             .map((line, i) => (
-                <p className="pv1" key={i}>
+                <p key={i} className="pv1">
                     {line}
                 </p>
             ))}
@@ -55,8 +59,8 @@ export const PlayableExample: Story<PlayableExampleArgs> = ({ onRetry, onCancel,
                 <CloudStorageUploadItem
                     {...status}
                     key={status.uploadID}
-                    onRetry={onRetry}
                     onCancel={onCancel}
+                    onRetry={onRetry}
                 />
             ))}
         </CloudStorageUploadPanel>
@@ -102,7 +106,7 @@ function getUploadTasks(count: number): CloudStorageUploadTask[] {
     return Array(count)
         .fill(0)
         .map(() => ({
-            uploadID: faker.random.uuid(),
+            uploadID: faker.datatype.uuid(),
             fileName: faker.random.word() + "." + faker.system.commonFileExt(),
             status: "uploading",
             percent: chance.integer({ min: 0, max: 100 }),

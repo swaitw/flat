@@ -1,13 +1,11 @@
 import "./style.less";
-import recordSVG from "./icons/record.svg";
-import recordActiveSVG from "./icons/record-active.svg";
-import recordDisabledSVG from "./icons/record-disabled.svg";
 
 import React, { FC, useCallback, useEffect, useRef, useState } from "react";
-import { TopBarRightBtn } from "../TopBar/TopBarRightBtn";
+import { useTranslate } from "@netless/flat-i18n";
+import { TopBarRoundBtn } from "../TopBar";
+import { SVGRecord, SVGRecordStop } from "../../FlatIcons";
 
 export interface RecordButtonProps {
-    disabled: boolean;
     isRecording: boolean;
     onClick: () => void;
 }
@@ -24,10 +22,12 @@ function renderTime(seconds: number): string {
     );
 }
 
-export const RecordButton: FC<RecordButtonProps> = ({ disabled, isRecording, onClick }) => {
+export const RecordButton: FC<RecordButtonProps> = ({ isRecording, onClick }) => {
     const countTimeout = useRef(NaN);
     const startTime = useRef(0);
     const [count, setCount] = useState("");
+
+    const t = useTranslate();
 
     const countUp = useCallback(() => {
         setCount(renderTime(Math.floor((Date.now() - startTime.current) / 1000)));
@@ -63,17 +63,19 @@ export const RecordButton: FC<RecordButtonProps> = ({ disabled, isRecording, onC
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isRecording]);
 
-    const iconSVG = disabled ? recordDisabledSVG : isRecording ? recordActiveSVG : recordSVG;
-
     return (
-        <div className="record-button">
-            <TopBarRightBtn
-                title="Record"
-                icon={<img src={iconSVG} />}
+        <div className="record-button-container">
+            <TopBarRoundBtn
+                icon={isRecording ? <SVGRecordStop /> : <SVGRecord />}
                 onClick={onClick}
-                disabled={disabled}
-            />
-            {count}
+            >
+                {isRecording ? (
+                    <span className="recording-text-stop">{t("stop-recording")}</span>
+                ) : (
+                    <span className="recording-text-start">{t("start-recording")}</span>
+                )}
+                <span className="recording-time-count">{count}</span>
+            </TopBarRoundBtn>
         </div>
     );
 };

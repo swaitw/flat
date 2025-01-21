@@ -6,22 +6,27 @@ import { CloudStorageFileList } from "../../components/CloudStorage";
 
 export interface CloudStorageFileListContainerProps {
     store: CloudStorageStore;
+    isLoadingData: Boolean;
 }
 
-export const CloudStorageFileListContainer = observer<CloudStorageFileListContainerProps>(
-    function CloudStorageFileListContainer({ store }) {
-        return (
-            <CloudStorageFileList
-                titleClickable
-                files={toJS(store.files)}
-                selectedFileUUIDs={toJS(store.selectedFileUUIDs)}
-                onSelectionChange={store.onSelectionChange}
-                fileMenus={store.fileMenus}
-                onItemMenuClick={store.onItemMenuClick}
-                onItemTitleClick={store.onItemTitleClick}
-                renamingFileUUID={store.renamingFileUUID}
-                onRename={store.onRename}
-            />
-        );
-    },
-);
+export const CloudStorageFileListContainer =
+    /* @__PURE__ */ observer<CloudStorageFileListContainerProps>(
+        function CloudStorageFileListContainer({ store, isLoadingData }) {
+            return (
+                <CloudStorageFileList
+                    titleClickable
+                    fileMenus={store.fileMenus}
+                    files={toJS(store.files)}
+                    isLoadingData={isLoadingData}
+                    parentDirectoryPath={store.parentDirectoryPath}
+                    renamingFileUUID={store.renamingFileUUID}
+                    selectedFileUUIDs={toJS(store.selectedFileUUIDs)}
+                    onItemMenuClick={store.onItemMenuClick}
+                    onItemTitleClick={store.onItemTitleClick}
+                    onNewDirectoryFile={store.onNewDirectoryFile}
+                    onRename={store.onRename}
+                    onSelectionChange={store.onSelectionChange}
+                />
+            );
+        },
+    );

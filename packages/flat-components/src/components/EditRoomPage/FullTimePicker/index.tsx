@@ -4,13 +4,13 @@ import "./style.less";
 
 import React, { FC, useContext } from "react";
 import { Col, Row } from "antd";
-import dateFnsGenerateConfig from "rc-picker/lib/generate/dateFns";
+import dateFnsGenerateConfig from "rc-picker/es/generate/dateFns";
 import generatePicker, { PickerTimeProps, PickerProps } from "antd/es/date-picker/generatePicker";
-import { ConfigContext } from "antd/lib/config-provider";
+import { ConfigContext } from "antd/es/config-provider";
 
 export type DatePickerProps = PickerProps<Date>;
 
-const DatePickerInner = generatePicker<Date>(dateFnsGenerateConfig);
+const DatePickerInner = /* @__PURE__ */ generatePicker<Date>(dateFnsGenerateConfig);
 
 export const DatePicker: FC<DatePickerProps> = props => {
     // For some reason DatePickerInner does not receive configs from ConfigContext.
@@ -21,8 +21,8 @@ export const DatePicker: FC<DatePickerProps> = props => {
     return (
         <DatePickerInner
             {...props}
-            locale={props.locale || localeContext?.DatePicker}
             getPopupContainer={props.getPopupContainer || getContextPopupContainer}
+            locale={props.locale || localeContext?.DatePicker}
         />
     );
 };
@@ -30,7 +30,7 @@ export const DatePicker: FC<DatePickerProps> = props => {
 export type TimePickerProps = Omit<PickerTimeProps<Date>, "picker">;
 
 export const TimePicker: FC<TimePickerProps> = props => {
-    return <DatePicker {...props} picker="time" mode={undefined} />;
+    return <DatePicker {...props} mode={undefined} picker="time" />;
 };
 
 export interface FullTimePickerProps {
@@ -52,9 +52,9 @@ export const FullTimePicker: FC<FullTimePickerProps> = ({
         <Row gutter={16}>
             <Col span={12}>
                 <DatePicker
-                    value={value}
                     allowClear={false}
                     disabledDate={disabledDate}
+                    value={value}
                     onChange={date => {
                         if (onChange && date) {
                             const result = new Date(date);
@@ -71,11 +71,10 @@ export const FullTimePicker: FC<FullTimePickerProps> = ({
             </Col>
             <Col span={12}>
                 <TimePicker
-                    value={value}
-                    format="HH:mm"
                     allowClear={false}
-                    disabledHours={disabledHours}
-                    disabledMinutes={disabledMinutes}
+                    disabledTime={() => ({ disabledHours, disabledMinutes })}
+                    format="HH:mm"
+                    value={value}
                     onChange={date => {
                         if (onChange && date) {
                             const result = new Date(date);

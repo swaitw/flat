@@ -4,9 +4,13 @@ import Chance from "chance";
 import faker from "faker";
 
 import { CloudStorageFileList, CloudStorageFileListProps } from "./index";
-import { CloudStorageFile } from "../types";
+import { CloudFile, FileConvertStep, FileResourceType, Region } from "@netless/flat-server-api";
 
 const chance = new Chance();
+
+/**
+ * TODO: we forget set i18n in current file!!!
+ */
 
 const storyMeta: Meta = {
     title: "CloudStorage/CloudStorageFileList",
@@ -23,11 +27,25 @@ Overview.args = {
         .fill(0)
         .map(() => {
             return {
-                fileUUID: faker.random.uuid(),
+                fileUUID: faker.datatype.uuid(),
                 fileName: faker.random.word() + "." + faker.system.commonFileExt(),
                 fileSize: chance.integer({ min: 0, max: 1000 * 1000 * 100 }),
-                convert: chance.pickone(["idle", "error", "success", "converting"]),
                 createAt: faker.date.past(),
+                fileURL: faker.internet.url(),
+                resourceType: FileResourceType.NormalResources,
+                meta: {
+                    whiteboardProjector: {
+                        taskToken: faker.random.word(),
+                        taskUUID: faker.random.word(),
+                        convertStep: chance.pickone([
+                            FileConvertStep.None,
+                            FileConvertStep.Converting,
+                            FileConvertStep.Done,
+                            FileConvertStep.Failed,
+                        ]),
+                        region: Region.CN_HZ,
+                    },
+                },
             };
         }),
 };
@@ -44,14 +62,28 @@ export const LongFileName: Story<{ fileName: string } & CloudStorageFileListProp
     ...restProps
 }) => {
     const [selectedFileUUIDs, setSelectedFileUUIDs] = useState<string[]>([]);
-    const files = useMemo<CloudStorageFile[]>(
+    const files = useMemo<CloudFile[]>(
         () => [
             {
-                fileUUID: faker.random.uuid(),
+                fileUUID: faker.datatype.uuid(),
                 fileName,
                 fileSize: chance.integer({ min: 0, max: 1000 * 1000 * 100 }),
-                convert: chance.pickone(["idle", "error", "success", "converting"]),
                 createAt: faker.date.past(),
+                fileURL: faker.internet.url(),
+                resourceType: FileResourceType.NormalResources,
+                meta: {
+                    whiteboardProjector: {
+                        taskToken: faker.random.word(),
+                        taskUUID: faker.random.word(),
+                        convertStep: chance.pickone([
+                            FileConvertStep.None,
+                            FileConvertStep.Converting,
+                            FileConvertStep.Done,
+                            FileConvertStep.Failed,
+                        ]),
+                        region: Region.CN_HZ,
+                    },
+                },
             },
         ],
         [fileName],
@@ -59,17 +91,17 @@ export const LongFileName: Story<{ fileName: string } & CloudStorageFileListProp
     return (
         <CloudStorageFileList
             {...restProps}
+            fileMenus={() => [
+                { key: "download", name: "下载" },
+                { key: "rename", name: "重命名" },
+                { key: "delete", name: "删除" },
+            ]}
             files={files}
             selectedFileUUIDs={selectedFileUUIDs}
             onSelectionChange={keys => {
                 setSelectedFileUUIDs(keys);
                 onSelectionChange(keys);
             }}
-            fileMenus={() => [
-                { key: "download", name: "下载" },
-                { key: "rename", name: "重命名" },
-                { key: "delete", name: "删除" },
-            ]}
         />
     );
 };
@@ -109,17 +141,31 @@ export const PlayableExample: Story<{ itemCount: number } & CloudStorageFileList
     ...restProps
 }) => {
     const [selectedFileUUIDs, setSelectedFileUUIDs] = useState<string[]>([]);
-    const files = useMemo<CloudStorageFile[]>(
+    const files = useMemo<CloudFile[]>(
         () =>
             Array(itemCount)
                 .fill(0)
                 .map(() => {
                     return {
-                        fileUUID: faker.random.uuid(),
+                        fileUUID: faker.datatype.uuid(),
                         fileName: faker.random.words() + "." + faker.system.commonFileExt(),
                         fileSize: chance.integer({ min: 0, max: 1000 * 1000 * 100 }),
-                        convert: chance.pickone(["idle", "error", "success", "converting"]),
                         createAt: faker.date.past(),
+                        fileURL: faker.internet.url(),
+                        resourceType: FileResourceType.NormalResources,
+                        meta: {
+                            whiteboardProjector: {
+                                taskToken: faker.random.word(),
+                                taskUUID: faker.random.word(),
+                                convertStep: chance.pickone([
+                                    FileConvertStep.None,
+                                    FileConvertStep.Converting,
+                                    FileConvertStep.Done,
+                                    FileConvertStep.Failed,
+                                ]),
+                                region: Region.CN_HZ,
+                            },
+                        },
                     };
                 }),
         [itemCount],
@@ -127,17 +173,17 @@ export const PlayableExample: Story<{ itemCount: number } & CloudStorageFileList
     return (
         <CloudStorageFileList
             {...restProps}
+            fileMenus={() => [
+                { key: "download", name: "下载" },
+                { key: "rename", name: "重命名" },
+                { key: "delete", name: <span className="red">删除</span> },
+            ]}
             files={files}
             selectedFileUUIDs={selectedFileUUIDs}
             onSelectionChange={keys => {
                 setSelectedFileUUIDs(keys);
                 onSelectionChange(keys);
             }}
-            fileMenus={() => [
-                { key: "download", name: "下载" },
-                { key: "rename", name: "重命名" },
-                { key: "delete", name: <span className="red">删除</span> },
-            ]}
         />
     );
 };

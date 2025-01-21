@@ -1,15 +1,19 @@
-import homeIconGraySVG from "./icons/home-icon-gray.svg";
-import roomTypeSVG from "./icons/room-type.svg";
-import "./index.less";
+import {
+    SVGCircleInfoOutlined,
+    SVGCopy,
+    SVGModeLecture,
+    SVGTime,
+    SVGUserGroup,
+} from "../../FlatIcons";
+import "./style.less";
 
-import React, { useMemo } from "react";
-import { formatTime } from "../../../utils/room";
-import { formatDistanceStrict } from "date-fns";
-import { zhCN, enUS } from "date-fns/locale";
-import { RoomInfo, RoomType } from "../../../types/room";
-import { RoomStatusElement } from "../../RoomStatusElement";
-import { useTranslation } from "react-i18next";
+import React, { useCallback, useMemo } from "react";
+import { Button, message } from "antd";
 import { observer } from "mobx-react-lite";
+import { useLanguage, useTranslate } from "@netless/flat-i18n";
+import { RoomInfo, RoomType } from "../../../types/room";
+import { formatInviteCode, formatTime } from "../../../utils/room";
+import { RoomStatusElement } from "../../RoomStatusElement";
 
 export interface RoomDetailBodyProps {
     roomInfo: RoomInfo;
@@ -17,89 +21,93 @@ export interface RoomDetailBodyProps {
     jumpToPeriodicRoomDetailPage?: () => void;
 }
 
-export const RoomDetailBody = observer<RoomDetailBodyProps>(function RoomDetailBody({
-    roomInfo,
-    showRoomCountVisible,
-    jumpToPeriodicRoomDetailPage,
-}) {
-    const { t, i18n } = useTranslation();
-    const { beginTime, endTime } = roomInfo;
-    const lang = i18n.language;
+export const RoomDetailBody = /* @__PURE__ */ observer<RoomDetailBodyProps>(
+    function RoomDetailBody({ roomInfo }) {
+        const t = useTranslate();
+        const language = useLanguage();
+        const { beginTime, endTime, inviteCode, periodicUUID, roomUUID } = roomInfo;
+        const uuid = periodicUUID || roomUUID;
 
-    const formattedBeginTime = useMemo(
-        () => (beginTime ? formatTime(beginTime, i18n.language) : null),
-        [beginTime, i18n.language],
-    );
-    const formattedEndTime = useMemo(
-        () => (endTime ? formatTime(endTime, i18n.language) : null),
-        [endTime, i18n.language],
-    );
+        const formattedBeginTime = useMemo(
+            () => (beginTime ? formatTime(beginTime, language) : null),
+            [beginTime, language],
+        );
+        const formattedEndTime = useMemo(
+            () => (endTime ? formatTime(endTime, language) : null),
+            [endTime, language],
+        );
 
-    return (
-        <div className="room-detail-body">
-            <div className="room-detail-body-content">
-                <div className="room-detail-body-content-time-container">
-                    {formattedBeginTime && (
-                        <div className="room-detail-body-content-time">
-                            <div className="room-detail-body-content-time-number">
-                                {formattedBeginTime.time}
-                            </div>
-                            <div className="room-detail-body-content-time-date">
-                                {formattedBeginTime.date}
-                            </div>
-                        </div>
-                    )}
-                    {roomInfo.endTime && roomInfo.beginTime && (
-                        <div className="room-detail-body-content-time-mid">
-                            <div className="room-detail-body-content-time-mid-during">
-                                {formatDistanceStrict(roomInfo.endTime, roomInfo.beginTime, {
-                                    locale: lang?.startsWith("zh") ? zhCN : enUS,
-                                })}
-                            </div>
-                            <div className="room-detail-body-content-time-mid-state">
-                                <RoomStatusElement room={roomInfo} />
-                            </div>
-                        </div>
-                    )}
-                    {formattedEndTime && (
-                        <div className="room-detail-body-content-time">
-                            <div className="room-detail-body-content-time-number">
-                                {formattedEndTime.time}
-                            </div>
-                            <div className="room-detail-body-content-time-date">
-                                {formattedEndTime.date}
-                            </div>
-                        </div>
-                    )}
-                </div>
-                {showRoomCountVisible && (
-                    <div
-                        className="room-detail-body-content-room-count"
-                        onClick={jumpToPeriodicRoomDetailPage}
-                    >
-                        {t("view-all-rooms-in-periodic-rooms", { count: roomInfo.count })}
-                    </div>
-                )}
-                <div className="room-detail-body-content-cut-line" />
-                <div className="room-detail-body-content-info">
-                    <div>
-                        <img src={homeIconGraySVG} />
-                        <span>{t("room-uuid")}</span>
-                    </div>
-                    <div className="room-detail-body-content-info-right">
-                        {roomInfo.periodicUUID || roomInfo.roomUUID}
-                    </div>
-                </div>
-                <div className="room-detail-body-content-info">
-                    <div>
-                        <img src={roomTypeSVG} />
-                        <span>{t("room-type")}</span>
-                    </div>
-                    <div className="room-detail-body-content-info-right">
-                        {t(`class-room-type.${roomInfo.roomType || RoomType.BigClass}`)}
-                    </div>
+        const handleCopy = useCallback(
+            (text: string) => {
+                navigator.clipboard.writeText(text);
+                void message.success(t("copy-success"));
+            },
+            [t],
+        );
+
+        return (
+            <div className="room-detail-body">
+                <div className="room-detail-body-content">
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td className="room-detail-body-content-left">
+                                    <SVGCircleInfoOutlined />
+                                    <span>{t("status")}</span>
+                                </td>
+                                <td className="room-detail-body-content-right">
+                                    <RoomStatusElement room={roomInfo} />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className="room-detail-body-content-left">
+                                    <SVGTime />
+                                    <span>{t("time")}</span>
+                                </td>
+                                <td className="room-detail-body-content-right">
+                                    <span>
+                                        {formattedBeginTime?.date} {formattedBeginTime?.time}
+                                        {" ~ "}
+                                        {formattedEndTime?.date} {formattedEndTime?.time}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className="room-detail-body-content-left">
+                                    <SVGModeLecture />
+                                    <span>{t("room-uuid")}</span>
+                                </td>
+                                <td className="room-detail-body-content-right">
+                                    <span className="room-detail-body-selectable">
+                                        {formatInviteCode(uuid, inviteCode)}
+                                        {inviteCode && (
+                                            <Button
+                                                className="room-detail-body-content-btn"
+                                                title={t("copy")}
+                                                type="link"
+                                                onClick={() =>
+                                                    handleCopy(formatInviteCode(uuid, inviteCode))
+                                                }
+                                            >
+                                                <SVGCopy />
+                                            </Button>
+                                        )}
+                                    </span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className="room-detail-body-content-left">
+                                    <SVGUserGroup />
+                                    <span>{t("room-type")}</span>
+                                </td>
+                                <td className="room-detail-body-content-right">
+                                    {t(`class-room-type.${roomInfo.roomType || RoomType.BigClass}`)}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
-        </div>
-    );
-});
+        );
+    },
+);

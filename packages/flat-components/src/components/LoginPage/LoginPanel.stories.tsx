@@ -1,9 +1,11 @@
-import QRCodeSVG from "./icons/qr-code.svg";
-
-import { Meta, Story } from "@storybook/react";
-import { Modal } from "antd";
 import React from "react";
-import { LoginChannelType, LoginPanel, LoginPanelProps } from ".";
+import { Meta, Story } from "@storybook/react";
+import { LoginPanel } from ".";
+import { Overview as StoryLoginWithCode } from "./LoginWithCode/LoginWithCode.stories";
+import { Overview as StoryLoginWithEmail } from "./LoginWithPassword/LoginWithPassword.stories";
+
+import { LoginWithCode } from "./LoginWithCode";
+import { LoginWithPassword } from "./LoginWithPassword";
 
 const storyMeta: Meta = {
     title: "LoginPage/LoginPanel",
@@ -31,26 +33,23 @@ const storyMeta: Meta = {
 
 export default storyMeta;
 
-const handleLogin = (loginChannel: LoginChannelType): React.ReactElement | undefined => {
-    switch (loginChannel) {
-        case "wechat": {
-            return <img src={QRCodeSVG} />;
-        }
-        case "github": {
-            Modal.info({ content: "This is Github Login" });
-            return;
-        }
-        default: {
-            return;
-        }
-    }
+export const PlayableExample: Story<{ region: "CN" | "US" }> = ({ region }) => {
+    return (
+        <LoginPanel>
+            {region === "CN" && <LoginWithCode {...(StoryLoginWithCode.args as any)} />}
+            {region === "US" && <LoginWithPassword {...(StoryLoginWithEmail.args as any)} />}
+        </LoginPanel>
+    );
 };
 
-export const PlayableExample: Story<LoginPanelProps> = args => (
-    <div className="vh-100">
-        <LoginPanel {...args} />
-    </div>
-);
 PlayableExample.args = {
-    onLogin: handleLogin,
+    region: "CN",
+};
+PlayableExample.argTypes = {
+    region: {
+        control: {
+            type: "radio",
+            options: ["CN", "US"],
+        },
+    },
 };

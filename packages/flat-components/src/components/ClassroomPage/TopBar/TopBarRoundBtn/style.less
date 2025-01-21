@@ -1,4 +1,6 @@
 .topbar-round-btn {
+    -webkit-app-region: no-drag;
+
     margin-left: 16px;
     padding: 3px 13px 4px 9px;
     display: inline-flex;
@@ -23,5 +25,16 @@
     &.is-dark {
         color: #fff;
         background: #444e60;
+    }
+}
+
+.flat-color-scheme-dark {
+    .topbar-round-btn {
+        border-color: var(--grey-6);
+
+        &.is-dark {
+            color: var(--text);
+            background: transparent;
+        }
     }
 }

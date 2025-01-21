@@ -1,19 +1,19 @@
 import { Select } from "antd";
 import { SelectProps } from "antd/lib/select";
 import React, { FC } from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslate } from "@netless/flat-i18n";
 import { PeriodicEndType } from "../../../types/room";
 
 export type PeriodicEndTypeSelectorProps = SelectProps<PeriodicEndType>;
 
 export const PeriodicEndTypeSelector: FC<PeriodicEndTypeSelectorProps> = props => {
-    const { t } = useTranslation();
+    const t = useTranslate();
     return (
         <Select {...props}>
             {["rate", "time"].map(type => {
                 const periodicEndTypeName = t(`end-repeat-type.${type as PeriodicEndType}`);
                 return (
-                    <Select.Option key={type} value={type} label={periodicEndTypeName}>
+                    <Select.Option key={type} label={periodicEndTypeName} value={type}>
                         {periodicEndTypeName}
                     </Select.Option>
                 );

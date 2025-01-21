@@ -25,18 +25,12 @@ export const MainPageLayoutHorizontal: React.FC<MainPageLayoutHorizontalProps> =
 }) => {
     return (
         <div className="main-horizontal-layout-container">
-            <MainPageNavHorizontal {...restProps} onClick={onClick} activeKeys={activeKeys} />
-            <div className="main-horizontal-layout-content-background fancy-scrollbar">
-                <div className="main-horizontal-layout-content-container">
-                    {subMenu && (
-                        <MainPageSubMenu
-                            onClick={onClick}
-                            activeKeys={activeKeys}
-                            subMenu={subMenu}
-                        />
-                    )}
-                    <div className="main-horizontal-layout-content">{children}</div>
-                </div>
+            <MainPageNavHorizontal {...restProps} activeKeys={activeKeys} onClick={onClick} />
+            <div className="main-horizontal-layout-content-container fancy-scrollbar">
+                {subMenu && (
+                    <MainPageSubMenu activeKeys={activeKeys} subMenu={subMenu} onClick={onClick} />
+                )}
+                <div className="main-horizontal-layout-content">{children}</div>
             </div>
         </div>
     );

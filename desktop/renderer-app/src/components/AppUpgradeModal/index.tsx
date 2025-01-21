@@ -2,8 +2,8 @@ import "./index.less";
 import { Button, Modal } from "antd";
 import { observer } from "mobx-react-lite";
 import React, { useEffect, useState } from "react";
-import { ipcAsyncByMainWindow, ipcReceive, ipcReceiveRemove } from "../../utils/ipc";
-import { useTranslation } from "react-i18next";
+import { ipcAsyncByApp, ipcReceive, ipcReceiveRemove } from "../../utils/ipc";
+import { useTranslate } from "@netless/flat-i18n";
 import { update } from "flat-types";
 
 export interface AppUpgradeModalProps {
@@ -19,7 +19,7 @@ export const AppUpgradeModal = observer<AppUpgradeModalProps>(function AppUpgrad
     updateInfo,
     onClose,
 }) {
-    const { t } = useTranslation();
+    const t = useTranslate();
     const [upgradePercent, setUpgradePercent] = useState(0);
     const [showUpgradeProgress, setShowUpgradeProgress] = useState(false);
     const [upgradeFail, setUpgradeFail] = useState(false);
@@ -34,7 +34,7 @@ export const AppUpgradeModal = observer<AppUpgradeModalProps>(function AppUpgrad
                 }
             });
 
-            ipcAsyncByMainWindow("start-update", {
+            ipcAsyncByApp("start-update", {
                 prereleaseTag: updateInfo.prereleaseTag,
             });
         }
@@ -58,15 +58,15 @@ export const AppUpgradeModal = observer<AppUpgradeModalProps>(function AppUpgrad
 
     return (
         <Modal
-            keyboard={false}
-            width={386}
-            maskClosable={false}
-            title={renderModalTitle()}
-            footer={[]}
-            visible={updateInfo !== null}
-            onCancel={cancelUpgrade}
-            wrapClassName="app-upgrade-modal-container"
             closable={false}
+            footer={[]}
+            keyboard={false}
+            maskClosable={false}
+            open={updateInfo !== null}
+            title={renderModalTitle()}
+            width={386}
+            wrapClassName="app-upgrade-modal-container"
+            onCancel={cancelUpgrade}
         >
             {showUpgradeProgress ? (
                 <div>

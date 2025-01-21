@@ -1,6 +1,6 @@
 import "./index.less";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Button, Table } from "antd";
 import { getDay } from "date-fns";
 import { format, formatWithOptions } from "date-fns/fp";
@@ -10,9 +10,10 @@ import { getWeekName, getWeekNames } from "../../utils/room";
 import { RoomStatusElement } from "../RoomStatusElement";
 import { MoreMenu } from "./MoreMenu";
 import { CancelPeriodicRoomModal } from "./CancelPeriodicRoomModal";
-import { useTranslation } from "react-i18next";
+import { useLanguage, useTranslate } from "@netless/flat-i18n";
 
 export interface PeriodicRoomPanelProps {
+    pmi?: string | null;
     rooms: Array<RoomInfo | undefined>;
     userName: string;
     isCreator: boolean;
@@ -31,6 +32,7 @@ export interface PeriodicRoomPanelProps {
 }
 
 export const PeriodicRoomPanel: React.FC<PeriodicRoomPanelProps> = ({
+    pmi,
     rooms,
     userName,
     inviteBaseUrl,
@@ -43,15 +45,15 @@ export const PeriodicRoomPanel: React.FC<PeriodicRoomPanelProps> = ({
     jumpToModifyPeriodicRoomPage,
     jumpToModifyOrdinaryRoomPage,
 }) => {
-    const { t, i18n } = useTranslation();
+    const t = useTranslate();
+    const language = useLanguage();
     const [cancelPeriodicRoomModalVisible, setCancelPeriodicRoomModalVisible] = useState(false);
 
-    const lang = i18n.language;
-    const locale = lang.startsWith("zh") ? zhCN : enUS;
+    const locale = useMemo(() => (language.startsWith("zh") ? zhCN : enUS), [language]);
     const yearMonthFormat = formatWithOptions({ locale }, "yyyy/MM");
     const dayFormat = formatWithOptions({ locale }, "dd");
     const timeSuffixFormat = format("HH:mm");
-    const dayWeekFormat = formatWithOptions({ locale }, "yyyy/MM/dd iii");
+    const dayWeekFormat = formatWithOptions({ locale }, "yyyy/MM/dd (iii)");
 
     const hasRunning = rooms.some(room =>
         [RoomStatus.Started, RoomStatus.Paused].includes(room?.roomStatus as RoomStatus),
@@ -85,22 +87,23 @@ export const PeriodicRoomPanel: React.FC<PeriodicRoomPanelProps> = ({
                     <div className="periodic-room-panel-month-value">{key}</div>
                     <div className="periodic-room-panel-table-line" />
                     <Table
-                        rowKey="roomUUID"
-                        dataSource={polymerizationRooms[key]}
-                        showHeader={false}
                         bordered={false}
+                        dataSource={polymerizationRooms[key]}
                         pagination={false}
+                        rowKey="roomUUID"
+                        showHeader={false}
                     >
                         <Table.Column
                             align="left"
                             render={(_, room: RoomInfo) =>
+                                // TODO: i18n
                                 dayFormat(room.beginTime || defaultDate) + "日"
                             }
                         />
                         <Table.Column
                             align="center"
                             render={(_, room: RoomInfo) =>
-                                getWeekName(getDay(room.beginTime || defaultDate), i18n.language)
+                                getWeekName(getDay(room.beginTime || defaultDate), language)
                             }
                         />
                         <Table.Column
@@ -125,12 +128,10 @@ export const PeriodicRoomPanel: React.FC<PeriodicRoomPanelProps> = ({
                                 return (
                                     <MoreMenu
                                         inviteBaseUrl={inviteBaseUrl}
-                                        room={room}
-                                        userName={userName}
                                         isCreator={isCreator}
-                                        onCopyInvitation={onCopyInvitation}
-                                        onCancelSubPeriodicRoom={() =>
-                                            onCancelSubPeriodicRoom(
+                                        isPmi={room.inviteCode === pmi}
+                                        jumpToModifyOrdinaryRoomPage={() =>
+                                            jumpToModifyOrdinaryRoomPage(
                                                 room.roomUUID,
                                                 room.periodicUUID!,
                                             )
@@ -138,12 +139,15 @@ export const PeriodicRoomPanel: React.FC<PeriodicRoomPanelProps> = ({
                                         jumpToRoomDetailPage={() =>
                                             jumpToRoomDetailPage(room.roomUUID, room.periodicUUID!)
                                         }
-                                        jumpToModifyOrdinaryRoomPage={() =>
-                                            jumpToModifyOrdinaryRoomPage(
+                                        room={room}
+                                        userName={userName}
+                                        onCancelSubPeriodicRoom={() =>
+                                            onCancelSubPeriodicRoom(
                                                 room.roomUUID,
                                                 room.periodicUUID!,
                                             )
                                         }
+                                        onCopyInvitation={onCopyInvitation}
                                     />
                                 );
                             }}
@@ -155,24 +159,32 @@ export const PeriodicRoomPanel: React.FC<PeriodicRoomPanelProps> = ({
     };
 
     return (
-        <div className="periodic-room-panel-container">
-            <div className="periodic-room-panel-body">
+        <>
+            <div className="periodic-room-panel-container">
                 <div className="periodic-room-panel-tips">
-                    <div className="periodic-room-panel-tips-title">
-                        {t("repeat-frequency", {
-                            week: getWeekNames(periodicInfo.weeks, i18n.language),
-                        })}
+                    <div>
+                        {t("time")}
+
+                        <span>
+                            {t("repeat-frequency", {
+                                week: getWeekNames(periodicInfo.weeks, language),
+                            })}
+                        </span>
                     </div>
-                    <div className="periodic-room-panel-tips-type">
-                        {t("schedule-room-type", {
-                            type: t(`class-room-type.${periodicInfo.roomType}`),
-                        })}
+                    <div>
+                        {t("type")}
+
+                        <span>{t(`class-room-type.${periodicInfo.roomType}`)}</span>
                     </div>
-                    <div className="periodic-room-panel-tips-inner">
-                        {t("schedule-room-detail", {
-                            time: dayWeekFormat(periodicInfo.endTime),
-                            length: rooms.length,
-                        })}
+                    <div>
+                        {t("periodic")}
+
+                        <span>
+                            {t("schedule-room-detail", {
+                                time: dayWeekFormat(periodicInfo.endTime),
+                                length: rooms.length,
+                            })}
+                        </span>
                     </div>
                 </div>
                 <div className="periodic-room-panel-btn-list">
@@ -183,8 +195,8 @@ export const PeriodicRoomPanel: React.FC<PeriodicRoomPanelProps> = ({
                             </Button>
                             <Button
                                 danger
-                                onClick={() => setCancelPeriodicRoomModalVisible(true)}
                                 disabled={hasRunning}
+                                onClick={() => setCancelPeriodicRoomModalVisible(true)}
                             >
                                 {t("cancel-of-periodic-rooms")}
                             </Button>
@@ -198,11 +210,11 @@ export const PeriodicRoomPanel: React.FC<PeriodicRoomPanelProps> = ({
                 {renderPeriodicRoomTable()}
             </div>
             <CancelPeriodicRoomModal
-                visible={cancelPeriodicRoomModalVisible}
                 isCreator={isCreator}
-                onCancelPeriodicRoom={onCancelPeriodicRoom}
+                visible={cancelPeriodicRoomModalVisible}
                 onCancel={() => setCancelPeriodicRoomModalVisible(false)}
+                onCancelPeriodicRoom={onCancelPeriodicRoom}
             />
-        </div>
+        </>
     );
 };
